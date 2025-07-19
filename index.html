@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalendarz Recepcji - Salon Fryzjerski dla Psów</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .header h1 {
+            color: #4a5568;
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .date-nav {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            color: white;
+            padding: 6px 12px;
+            font-size: 0.8em;
+        }
+        
+        .calendar-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: 100px repeat(7, 1fr);
+            gap: 2px;
+            margin-top: 20px;
+        }
+        
+        .time-slot, .day-header, .appointment {
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+        
+        .time-slot {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .day-header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 700;
+            font-size: 1em;
+        }
+        
+        .day-column {
+            min-height: 60px;
+            background: #f8f9fa;
+            position: relative;
+            border: 1px solid #e9ecef;
+        }
+        
+        .appointment {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+            color: white;
+            margin: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            border-radius: 8px;
+        }
+        
+        .appointment:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .appointment.pracownik-1 { background: linear-gradient(45deg, #FF6B6B, #FF8E53); }
+        .appointment.pracownik-2 { background: linear-gradient(45deg, #4ECDC4, #44A08D); }
+        .appointment.pracownik-3 { background: linear-gradient(45deg, #A8EDEA, #FED6E3); color: #333; }
+        .appointment.pracownik-4 { background: linear-gradient(45deg, #667eea, #764ba2); }
+        
+        .appointment-info {
+            font-size: 0.75em;
+            line-height: 1.3;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transform: scale(0.7);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .modal.show .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .close:hover { color: #000; }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        @media (max-width: 768px) {
+            .calendar-grid {
+                grid-template-columns: 80px repeat(7, 1fr);
+                font-size: 0.8em;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .date-nav {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐕 Kalendarz Recepcji 🐕</h1>
+            <p style="text-align: center; color: #6c757d; font-size: 1.1em;">Salon Fryzjerski dla Psów</p>
+            
+            <div class="controls">
+                <div class="date-nav">
+                    <button class="btn btn-secondary" onclick="changeWeek(-1)">← Poprzedni tydzień</button>
+                    <button class="btn btn-secondary" onclick="goToToday()">Dzisiaj</button>
+                    <button class="btn btn-secondary" onclick="changeWeek(1)">Następny tydzień →</button>
+                </div>
+                <button class="btn btn-primary" onclick="openModal()">➕ Dodaj wizytę</button>
+            </div>
+        </div>
+        
+        <div class="calendar-container">
+            <div id="alerts"></div>
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                Ładowanie kalendarza...
+            </div>
+            <div id="calendar" style="display: none;">
+                <h3 id="week-title"></h3>
+                <div class="calendar-grid" id="calendar-grid">
+                    <!-- Calendar will be generated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal dodawania wizyty -->
+    <div id="appointmentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 style="margin-bottom: 25px; color: #4a5568;">➕ Nowa wizyta</h2>
+            
+            <form id="appointmentForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="data_wizyty">Data wizyty:</label>
+                        <input type="date" id="data_wizyty" name="data_wizyty" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pracownik_id">Pracownik:</label>
+                        <select id="pracownik_id" name="pracownik_id" required>
+                            <option value="">Wybierz pracownika...</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="godzina_rozpoczecia">Godzina rozpoczęcia:</label>
+                        <input type="time" id="godzina_rozpoczecia" name="godzina_rozpoczecia" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="godzina_zakonczenia">Godzina zakończenia:</label>
+                        <input type="time" id="godzina_zakonczenia" name="godzina_zakonczenia" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="imie_klienta">Imię klienta:</label>
+                        <input type="text" id="imie_klienta" name="imie_klienta" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="imie_zwierzaka">Imię zwierzaka:</label>
+                        <input type="text" id="imie_zwierzaka" name="imie_zwierzaka" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="telefon">Numer telefonu:</label>
+                    <input type="tel" id="telefon" name="telefon" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="nazwa_uslugi">Nazwa usługi:</label>
+                    <input type="text" id="nazwa_uslugi" name="nazwa_uslugi" placeholder="np. Strzyżenie + kąpiel" required>
+                </div>
+                
+                <div style="text-align: right; margin-top: 30px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()" style="margin-right: 10px;">Anuluj</button>
+                    <button type="submit" class="btn btn-primary">💾 Zapisz wizytę</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'api.php';
+        let currentWeekStart = new Date();
+        let pracownicy = [];
+        
+        // Ustawienie początku tygodnia na poniedziałek
+        function getMonday(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(d.setDate(diff));
+        }
+        
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
+        
+        function formatTime(time) {
+            return time.substring(0, 5);
+        }
+        
+        function showAlert(message, type = 'success') {
+            const alertsDiv = document.getElementById('alerts');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            alertsDiv.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+        
+        async function loadPracownicy() {
+            try {
+                console.log('Loading employees...');
+                const response = await fetch(`${API_BASE}?action=pracownicy`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const responseText = await response.text();
+                console.log('Employees response:', responseText);
+                
+                if (!responseText.trim()) {
+                    throw new Error('Empty response when loading employees');
+                }
+                
+                pracownicy = JSON.parse(responseText);
+                console.log('Loaded employees:', pracownicy);
+                
+                const select = document.getElementById('pracownik_id');
+                select.innerHTML = '<option value="">Wybierz pracownika...</option>';
+                
+                pracownicy.forEach(pracownik => {
+                    const option = document.createElement('option');
+                    option.value = pracownik.id;
+                    option.textContent = pracownik.imie;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Błąd ładowania pracowników:', error);
+                showAlert('Błąd ładowania listy pracowników: ' + error.message, 'danger');
+            }
+        }
+        
+        async function loadCalendar() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('calendar').style.display = 'none';
+            
+            try {
+                const monday = getMonday(currentWeekStart);
+                const sunday = new Date(monday);
+                sunday.setDate(monday.getDate() + 6);
+                
+                console.log('Loading calendar for:', formatDate(monday), 'to', formatDate(sunday));
+                
+                const url = `${API_BASE}?action=wizyty&start=${formatDate(monday)}&end=${formatDate(sunday)}`;
+                console.log('API URL:', url);
+                
+                const response = await fetch(url);
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const responseText = await response.text();
+                console.log('Response text:', responseText);
+                
+                if (!responseText.trim()) {
+                    throw new Error('Empty response from server');
+                }
+                
+                let wizyty;
+                try {
+                    wizyty = JSON.parse(responseText);
+                } catch (jsonError) {
+                    console.error('JSON parse error:', jsonError);
+                    console.error('Response was:', responseText);
+                    throw new Error('Invalid JSON response from server');
+                }
+                
+                console.log('Loaded appointments:', wizyty);
+                generateCalendar(monday, wizyty);
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('calendar').style.display = 'block';
+            } catch (error) {
+                console.error('Błąd ładowania kalendarza:', error);
+                showAlert('Błąd ładowania kalendarza: ' + error.message, 'danger');
+                document.getElementById('loading').innerHTML = `
+                    <div style="color: #dc3545; padding: 20px;">
+                        <h4>Błąd ładowania kalendarza</h4>
+                        <p>${error.message}</p>
+                        <button class="btn btn-primary" onclick="loadCalendar()">Spróbuj ponownie</button>
+                    </div>
+                `;
+            }
+        }
+        
+        function generateCalendar(monday, wizyty) {
+            const weekTitle = document.getElementById('week-title');
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            
+            weekTitle.textContent = `Tydzień ${formatDate(monday)} - ${formatDate(sunday)}`;
+            
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+            
+            // Nagłówki
+            grid.appendChild(createTimeSlot('Godzina'));
+            
+            const days = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'];
+            days.forEach((day, index) => {
+                const date = new Date(monday);
+                date.setDate(monday.getDate() + index);
+                const header = document.createElement('div');
+                header.className = 'day-header';
+                header.innerHTML = `<strong>${day}</strong><br>${formatDate(date)}`;
+                grid.appendChild(header);
+            });
+            
+            // Godziny pracy (8:00 - 18:00)
+            for (let hour = 8; hour < 18; hour++) {
+                const timeSlot = createTimeSlot(`${hour.toString().padStart(2, '0')}:00`);
+                grid.appendChild(timeSlot);
+                
+                // Kolumny dla każdego dnia
+                for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+                    const date = new Date(monday);
+                    date.setDate(monday.getDate() + dayIndex);
+                    const dateStr = formatDate(date);
+                    
+                    const dayColumn = document.createElement('div');
+                    dayColumn.className = 'day-column';
+                    
+                    // Znajdź wizyty dla tego dnia i godziny
+                    const dayAppointments = wizyty.filter(wizyta => {
+                        const wizytaDate = wizyta.data_wizyty;
+                        const wizytaHour = parseInt(wizyta.godzina_rozpoczecia.split(':')[0]);
+                        return wizytaDate === dateStr && wizytaHour === hour;
+                    });
+                    
+                    dayAppointments.forEach(wizyta => {
+                        const appointment = createAppointment(wizyta);
+                        dayColumn.appendChild(appointment);
+                    });
+                    
+                    grid.appendChild(dayColumn);
+                }
+            }
+        }
+        
+        function createTimeSlot(text) {
+            const slot = document.createElement('div');
+            slot.className = 'time-slot';
+            slot.textContent = text;
+            return slot;
+        }
+        
+        function createAppointment(wizyta) {
+            const appointment = document.createElement('div');
+            appointment.className = `appointment pracownik-${wizyta.pracownik_id}`;
+            appointment.onclick = () => showAppointmentDetails(wizyta);
+            
+            appointment.innerHTML = `
+                <div class="appointment-info">
+                    <strong>${formatTime(wizyta.godzina_rozpoczecia)}-${formatTime(wizyta.godzina_zakonczenia)}</strong><br>
+                    <strong>${wizyta.imie_zwierzaka}</strong> (${wizyta.imie_klienta})<br>
+                    ${wizyta.nazwa_uslugi}<br>
+                    <small>👤 ${wizyta.pracownik_imie}</small>
+                </div>
+            `;
+            
+            return appointment;
+        }
+        
+        function showAppointmentDetails(wizyta) {
+            const details = `
+                <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px;">
+                    <h3 style="color: #4a5568; margin-bottom: 15px;">📅 Szczegóły wizyty</h3>
+                    <p><strong>Data:</strong> ${wizyta.data_wizyty}</p>
+                    <p><strong>Godzina:</strong> ${formatTime(wizyta.godzina_rozpoczecia)} - ${formatTime(wizyta.godzina_zakonczenia)}</p>
+                    <p><strong>Klient:</strong> ${wizyta.imie_klienta}</p>
+                    <p><strong>Zwierzak:</strong> ${wizyta.imie_zwierzaka}</p>
+                    <p><strong>Telefon:</strong> ${wizyta.telefon}</p>
+                    <p><strong>Usługa:</strong> ${wizyta.nazwa_uslugi}</p>
+                    <p><strong>Pracownik:</strong> ${wizyta.pracownik_imie}</p>
+                    <div style="margin-top: 20px; text-align: right;">
+                        <button class="btn btn-danger" onclick="deleteAppointment(${wizyta.id})">🗑️ Usuń wizytę</button>
+                    </div>
+                </div>
+            `;
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal show';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+                    ${details}
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            };
+        }
+        
+        async function deleteAppointment(id) {
+            if (!confirm('Czy na pewno chcesz usunąć tę wizytę?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}?action=usun_wizyte&id=${id}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Wizyta została usunięta pomyślnie', 'success');
+                    loadCalendar();
+                    // Zamknij modal
+                    document.querySelectorAll('.modal').forEach(modal => modal.remove());
+                } else {
+                    showAlert('Błąd usuwania wizyty: ' + result.message, 'danger');
+                }
+            } catch (error) {
+                console.error('Błąd usuwania wizyty:', error);
+                showAlert('Błąd usuwania wizyty', 'danger');
+            }
+        }
+        
+        function changeWeek(direction) {
+            currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
+            loadCalendar();
+        }
+        
+        function goToToday() {
+            currentWeekStart = new Date();
+            loadCalendar();
+        }
+        
+        function openModal() {
+            const modal = document.getElementById('appointmentModal');
+            modal.style.display = 'block';
+            setTimeout(() => modal.classList.add('show'), 10);
+            
+            // Ustaw dzisiejszą datę jako domyślną
+            document.getElementById('data_wizyty').value = formatDate(new Date());
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('appointmentModal');
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                document.getElementById('appointmentForm').reset();
+            }, 300);
+        }
+        
+        // Obsługa formularza
+        document.getElementById('appointmentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            
+            // Walidacja godzin
+            if (data.godzina_rozpoczecia >= data.godzina_zakonczenia) {
+                showAlert('Godzina rozpoczęcia musi być wcześniejsza niż godzina zakończenia', 'danger');
+                return;
+            }
+            
+            try {
+                // Sprawdź dostępność pracownika
+                const checkResponse = await fetch(
+                    `${API_BASE}?action=sprawdz_dostepnosc&data=${data.data_wizyty}&godzina_start=${data.godzina_rozpoczecia}&godzina_end=${data.godzina_zakonczenia}&pracownik_id=${data.pracownik_id}`
+                );
+                const availability = await checkResponse.json();
+                
+                if (!availability.dostepny) {
+                    showAlert('Pracownik nie jest dostępny w wybranym terminie', 'danger');
+                    return;
+                }
+                
+                // Dodaj wizytę
+                const response = await fetch(`${API_BASE}?action=dodaj_wizyte`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Wizyta została dodana pomyślnie', 'success');
+                    closeModal();
+                    loadCalendar();
+                } else {
+                    showAlert('Błąd dodawania wizyty: ' + (result.message || 'Nieznany błąd'), 'danger');
+                }
+            } catch (error) {
+                console.error('Błąd dodawania wizyty:', error);
+                showAlert('Błąd dodawania wizyty', 'danger');
+            }
+        });
+        
+        // Zamknij modal po kliknięciu w tło
+        window.onclick = function(event) {
+            const modal = document.getElementById('appointmentModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+        
+        // Obsługa klawisza ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+                document.querySelectorAll('.modal').forEach(modal => modal.remove());
+            }
+        });
+        
+        // Inicjalizacja
+        document.addEventListener('DOMContentLoaded', function() {
+            currentWeekStart = getMonday(new Date());
+            loadPracownicy();
+            loadCalendar();
+        });
+    </script>
+</body>
+</html>
